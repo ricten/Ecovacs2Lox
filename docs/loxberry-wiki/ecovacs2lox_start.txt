@@ -1,0 +1,155 @@
+====== Ecovacs2Lox ======
+
+===== Plugin-Daten =====
+
+^ Autor | Rico Tengler |
+^ Logo | {{:plugins:ecovacs2lox:ecovacs2lox.png?64|Ecovacs2Lox}} |
+^ Status | BETA |
+^ Version | 0.1.0 |
+^ Min. LB Version | 4.0.0.0 |
+^ Release Download | https://github.com/ricten/Ecovacs2Lox/releases/latest/download/ecovacs2lox.zip |
+^ Pre-Release Download | - |
+^ Quellcode | [[https://github.com/ricten/Ecovacs2Lox|github.com/ricten/Ecovacs2Lox]] (MIT-Lizenz) |
+^ Beschreibung | Liest Ecovacs-Deebot-Saugroboter über die Ecovacs-Cloud (Anmeldung wie in der Ecovacs-App) und veröffentlicht Status, Akku, Reinigungsart, Saug- und Wasserstufe, Verschleißteile, Fehler und mehr per MQTT. Über das LoxBerry-MQTT-Gateway gelangen die Werte an den Loxone Miniserver. Dazu Befehle aus Loxone (Start, Stopp, Pause, zurück zur Station, Saug- und Wasserstufe, Ton), ab Werk gesperrt und mit Quittung. Ersatz für den ioBroker-Adapter ecovacs-deebot. |
+^ Sprachen | DE |
+^ Diskussion | FORUM-LINK-EINTRAGEN |
+
+----
+
+==== 1. Überblick ====
+
+**Ecovacs2Lox** meldet sich wie die Ecovacs-App bei der **Ecovacs-Cloud** an, liest darüber **Ihre Deebot-Roboter** und stellt Zustand und Messwerte als **MQTT-Topics** auf dem MQTT-Broker des LoxBerry bereit. Das LoxBerry-MQTT-Gateway macht daraus **virtuelle Eingänge** für den Loxone Miniserver. In der Gegenrichtung nimmt das Plugin **Befehle** aus Loxone an.
+
+  Roboter  <->  Ecovacs-Cloud  <->  Ecovacs2Lox (LoxBerry)  ->  MQTT-Broker  ->  MQTT-Gateway  ->  Miniserver
+
+**Stand: Beta.** Es gibt **keine lokale Schnittstelle** der Roboter, Plugin und Roboter reden nur über die Ecovacs-Cloud. Das ist eine **inoffizielle** Schnittstelle (die der Ecovacs-App); Ecovacs kann sie ändern oder sperren. Das Plugin ist nicht von Ecovacs.
+
+  * **Ältere Modelle** (Protokoll XML: Deebot 500, 600, 700, 900 u. a.): am **Deebot 605** geprüft (Anmeldung, Abfragen, Push-Meldungen, alle Werte und die Steuerbefehle; ''wasserstufe'' nicht, der Roboter hatte keinen Tank). Der 605 fährt nach ''pause'' nach wenigen Sekunden von selbst zur Station, ''weiter'' wirkt nur direkt nach der Pause.
+  * **Neuere Modelle** (Protokoll JSON: OZMO 920/950, T-, N- und X-Reihen): nach der Protokollbeschreibung gebaut, **ungeprüft** (kein Testgerät). Rückmeldungen sind ausdrücklich erwünscht.
+
+Eigenschaften:
+
+  * **Alle Roboter des Kontos** (bis zu fünf), je Roboter Name im Topic, Protokoll und Befehlsfreigabe
+  * **Anmeldung mit Geräteverifizierung** per E-Mail-Code (einmalig), Token wird gespeichert und rechtzeitig erneuert
+  * Push-Meldungen der Roboter (MQTT der Cloud) plus Abfragen per HTTPS (alle 20 s bei Reinigung, sonst alle 2 Minuten)
+  * Werte: Status als Klartext, Reinigungsart, Akku, Ladezustand, Saug- und Wasserstufe, Wassertank, Ruhezustand, Summen, Verschleißteile, Fehler
+  * **Befehle aus Loxone** (ab Werk gesperrt, mit Quittung, in drei Stufen je Roboter): ''start'', ''stopp'', ''pause'', ''weiter'', ''laden'', ''saugstufe'', ''wasserstufe'', ''finden''
+  * Veröffentlicht nur **Änderungen** (alle 5 Minuten alle Werte)
+  * MQTT-Broker des LoxBerry **oder eigener Broker**
+  * Lebenszeichen (''ecovacs/status/ok'', ''zaehler'', ''ts''), Autostart, Watchdog, Healthcheck
+
+===== 2. Installation =====
+
+**Voraussetzung:** LoxBerry 4.0 mit **PHP 7.4 oder neuer** (mit curl und openssl) und Internetzugang. Das bringt LoxBerry 4.0 auf Debian 11, 12 und 13 mit (PHP 7.4 bis 8.4). Die Installation prüft das und bricht sonst mit einem Hinweis im Installationslog ab.
+
+  - ZIP von der Release-Seite herunterladen oder im LoxBerry-Shop installieren.
+  - LoxBerry → **Plugin-Verwaltung** → **Plugin installieren**. Die Installation startet den Dienst.
+  - Plugin **Ecovacs2Lox** öffnen, Reiter **Konto**: E-Mail, Passwort und Land des Ecovacs-Kontos eintragen, speichern.
+  - **Verifizierung:** Beim ersten Mal verlangt Ecovacs einen Code per E-Mail. Im Reiter Konto „Code per E-Mail anfordern“, den Code eintragen, „Code bestätigen“.
+  - Reiter **Geräte**: Roboter aktivieren, Namen vergeben, bei Bedarf Befehle freigeben, speichern.
+  - Im **MQTT Gateway** das Abo ''ecovacs/#'' eintragen (siehe 5.1). Der Reiter **MQTT** zeigt, ob es steht.
+
+==== 2.1 Update ====
+
+Als Update installieren. Konfiguration, Anmeldung und Daten bleiben erhalten.
+
+**Automatische Updates:** Ecovacs2Lox liefert eine ''release.cfg'' im GitHub-Repository mit. Neue Installationen stehen in der Plugin-Verwaltung bei „Automatische Updates“ auf //Releases//: LoxBerry prüft täglich und installiert neuere Versionen selbst.
+
+**Immer das neueste Release:** [[https://github.com/ricten/Ecovacs2Lox/releases/latest/download/ecovacs2lox.zip|ecovacs2lox.zip]]
+
+==== 2.2 Deinstallation ====
+
+Plugin entfernen. Dienst und RAM-Daten werden gelöscht.
+
+===== 3. Konfiguration (LoxBerry) =====
+
+Reiter: **Konto · Geräte · MQTT · Einbindung in Loxone · Test · Logdateien**. Änderungen wirken ohne Neustart.
+
+==== 3.1 Konto ====
+
+^ Einstellung ^ Beschreibung ^
+| E-Mail | E-Mail-Adresse oder Ecovacs-ID des Kontos |
+| Passwort | Wird nie angezeigt; ein leeres Feld behält das gespeicherte Passwort. Es liegt in der Konfigurationsdatei des Plugins und geht nur als MD5-Hash an Ecovacs |
+| Land | Bestimmt den Server der Cloud (Europa, Nordamerika, Asien); China wird nicht unterstützt |
+
+Ein **zweites Konto**, mit dem der Roboter geteilt ist, ist sicherer als das Hauptkonto.
+
+==== 3.2 Geräte ====
+
+^ Einstellung ^ Standard ^ Beschreibung ^
+| Aktiv | an | Roboter abfragen |
+| Name im Topic | Name aus der Ecovacs-App | nur a–z, 0–9, _ und - |
+| Protokoll | automatisch erkennen | XML (ältere Modelle) oder JSON (neuere Modelle) fest einstellen, falls die Erkennung nicht klappt |
+| Befehle freigeben | aus | Stufen //steuern// (Start, Stopp, Pause, Weiter, zurück zur Station), //einstellen// (Saug- und Wasserstufe), //finden// (Ton) |
+| Alle Werte neu abfragen | 300 s | 60–3600 |
+
+==== 3.3 MQTT, Test und Logdateien ====
+
+Der Reiter MQTT zeigt das **Gateway-Abo**, die Verbindung zum Broker und zum **MQTT-Server der Ecovacs-Cloud**. Dessen Zertifikat stammt von einer eigenen Ecovacs-Zertifizierungsstelle und lässt sich mit öffentlichen Zertifikatsspeichern nicht prüfen; das Plugin prüft es deshalb nicht (verschlüsselt, aber nicht beglaubigt). Anmeldung und Befehle gehen per HTTPS mit geprüftem Zertifikat. Im Reiter Test gibt es die Selbstprüfung und den Dienst-Neustart.
+
+===== 4. MQTT-Topics (Referenz) =====
+
+Schema ''ecovacs/<name>/<wert>'', Zahlen mit Punkt ohne Einheit, Zustände 0/1, nicht retained. Die vollständige Liste steht im [[https://github.com/ricten/Ecovacs2Lox/blob/main/docs/wiki/MQTT-Topics.md|Repository]] und im Plugin im Reiter //Einbindung in Loxone//.
+
+^ Topic ^ Bedeutung ^
+| ''status'' | Zustand als Text: Lädt, Reinigt (Auto), Pausiert, Fährt zur Ladestation, Ruhezustand, Bereit, Fehler: … |
+| ''modus'', ''reinigt'', ''laedt'', ''zurueck'' | Reinigungsart (auto, edge, spot, pause, stop, returning …) und Zustände als Schalter |
+| ''akku'', ''akku_schwach'' | Akkustand in % und Warnung |
+| ''saugstufe'', ''wasserstufe'', ''wassertank'' | Einstellungen (ältere Modelle: Saugstufe 2 = normal, 3 = stark) |
+| ''summe_flaeche_m2'', ''summe_dauer_s'', ''summe_anzahl'' | Summen über alle Reinigungen |
+| ''verschleiss_hauptbuerste'', ''verschleiss_seitenbuerste'', ''verschleiss_filter'' | Restlebensdauer in % |
+| ''fehler_code'', ''fehler_text'' | Fehler (0 = keiner) und Klartext |
+| ''online'', ''verbunden'' | online = 0: Roboter nicht erreichbar (kein Fehler); verbunden: Antworten kommen an |
+| ''ecovacs/status/ok'' | 1 = Anmeldung und alle Roboter in Ordnung (ein ausgeschalteter Roboter ist kein Fehler) |
+| ''ecovacs/status/zaehler'' | Lebenszeichen 0–999, zählt alle 10 s |
+| ''ecovacs/status/ts'' | Zeitstempel des letzten Lebenszeichens |
+| ''ecovacs/befehl/<name>/<befehl>'' | Eingang für Befehle (siehe 5.3), Quittung unter ''…/quittung'' |
+
+===== 5. Miniserver Anbindung =====
+
+==== 5.1 MQTT-Gateway ====
+
+Das Abonnement ''ecovacs/#'' trägt das Plugin nur beim **Gateway V1** selbst ein. Das **Gateway V2** liest die Abo-Datei von Plugins nicht: Dort ''ecovacs/#'' **von Hand** im MQTT Gateway unter Abonnements eintragen (das Plugin prüft es im Reiter MQTT). ''ecovacs/status/ok'' und ''ecovacs/status/zaehler'' im Gateway auf **No Cache** stellen.
+
+==== 5.2 Virtuelle Eingänge ====
+
+Das Gateway ersetzt ''/'' durch ''_'': ''ecovacs/sauger/akku'' wird zu ''ecovacs_sauger_akku''. Texte (''status'', ''modus'', ''fehler_text'') als **virtuelle Texteingänge** anlegen. Keine Leerzeichen in Namen verwenden.
+
+==== 5.3 Befehle ====
+
+Ab Werk gesperrt, im Reiter //Geräte// freizugeben. Virtueller Ausgang: Adresse ''/dev/udp/<LoxBerry-IP>/<UDP-Port>'' (Standard 11884, steht im Plugin im Reiter „Einbindung in Loxone“), Befehl bei EIN ''publish ecovacs/befehl/<name>/<befehl> <wert>'' (ohne HTTP-Header/Body).
+
+^ Befehl ^ Wert ^ Wirkung ^
+| ''start'' | auto, kante, spot (oder 1) | Reinigung starten |
+| ''stopp'', ''pause'', ''weiter'' | 1 | beenden, pausieren, fortsetzen |
+| ''laden'' | 1 | zurück zur Ladestation |
+| ''saugstufe'', ''wasserstufe'' | 1–4 | Saug- und Wasserstufe (ältere Modelle: Saugstufe nur normal/stark) |
+| ''finden'' | 1 | Ton abspielen |
+
+**Quittung:** Unter ''ecovacs/befehl/<name>/<befehl>/quittung'' meldet das Plugin zuerst ''angenommen'' und dann ''ausgefuehrt'' oder ''abgelehnt: <Grund>''. Höchstens ein Befehl je Sekunde und Roboter. **Der Roboter fährt bei ''start'' los.**
+
+===== 6. Tipps & Tricks =====
+
+  * ''ecovacs_<name>_status_text'' bzw. ''…_status'' als Textanzeige im Loxone-Visualisierungsbaustein verwenden; für Schaltlogik ''reinigt'', ''laedt'' und ''fehler_code'' nutzen.
+  * ''ecovacs_status_zaehler'' im Miniserver überwachen: bleibt er stehen, läuft der Dienst nicht mehr.
+  * Fährt der Roboter mehrfach täglich, lohnt sich ein Statistikbaustein auf ''summe_anzahl'' und ''summe_flaeche_m2''.
+  * Melden Sie den Verschleiß rechtzeitig: ''verschleiss_filter'' unter 10 % → Erinnerung per Loxone.
+
+===== 7. FAQ / Troubleshooting =====
+
+^ Symptom ^ Ursache / Lösung ^
+| Installation bricht ab: „Dieses Plugin braucht PHP 7.4 oder neuer …“ | Auf dem LoxBerry läuft ein älteres PHP oder curl/openssl fehlen. Debian-Upgrade siehe [[https://wiki.loxberry.de/installation_von_loxberry/upgrade_distribution/start|Anleitung im LoxBerry-Wiki]] |
+| „Verifizierung nötig“ | Ecovacs verlangt einmal einen E-Mail-Code (Reiter Konto): anfordern und eintragen; Spam-Ordner prüfen |
+| „Konto oder Passwort sind falsch“ | Eingaben prüfen, speichern, „Anmeldung erneut versuchen“. Der Dienst wiederholt das nicht von selbst (Sperre vermeiden) |
+| Roboter „nicht erreichbar“ | Kein Fehler: ausgeschaltet oder ohne WLAN (''online'' = 0) |
+| „Das Protokoll des Roboters wurde nicht erkannt“ | Im Reiter Geräte das Protokoll fest einstellen oder ein Issue anlegen (Modell nennen) |
+| Keine Werte in Loxone, aber in MQTT | Gateway V2: Abo ''ecovacs/#'' von Hand eintragen |
+| Befehl „abgelehnt: Befehle sind gesperrt“ | Im Reiter Geräte die Stufe freigeben |
+| Einzelne Werte fehlen | Das Modell liefert sie nicht; das Plugin merkt sich nicht unterstützte Abfragen und fragt sie nicht mehr |
+
+Weitere Hinweise: [[https://github.com/ricten/Ecovacs2Lox/blob/main/docs/wiki/Fehlersuche.md|Fehlersuche im Repository]].
+
+===== 8. Changelog =====
+
+^ Version ^ Änderung ^
+| 0.1.0 | Erste Version (Beta): Anmeldung bei der Ecovacs-Cloud mit E-Mail-Verifizierung, alle Roboter des Kontos, ältere Modelle (XML) am Deebot 605 geprüft (auch die Steuerbefehle), neuere Modelle (JSON) ungeprüft, Push und Abfrage, Befehle (ab Werk gesperrt, mit Quittung), Healthcheck, Autoupdate, Weboberfläche im LoxBerry Design System |
