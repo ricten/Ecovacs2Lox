@@ -237,6 +237,10 @@ $p3 = EcoConfig::fromPost($p2, ['abfrage_abstand' => '5', 'geraete' => ['did1' =
 check('Konfiguration: Abstand mindestens 60, Namen ASCII ohne Leerzeichen, doppelte nummeriert, Protokoll geprueft, Kennung bereinigt',
     [$p3['abfrage_abstand'], $p3['geraete']['did1']['name'], $p3['geraete']['did2']['name'], $p3['geraete']['did2']['protokoll'], $p3['geraete']['did1']['protokoll'], isset($p3['geraete']['b$e']), array_keys($p3['geraete'])],
     [60, 'kueche_sauger', 'kueche_sauger_2', 'auto', 'json', false, ['did1', 'did2', 'be']]);
+check('Konfiguration: leerer Name bleibt leer (Cloud-Name gilt, nicht fest "roboter")', $p3['geraete']['be']['name'], '');
+$p3b = EcoConfig::fromPost($p2, ['geraete' => ['did1' => ['aktiv' => '1', 'name' => ''], 'did2' => ['aktiv' => '1', 'name' => '']]]);
+check('Roboter: Speichern mit leeren Namen behaelt den Cloud-Namen (Topics aendern sich nicht)',
+    array_map(fn($r) => $r['name'], EcoConfig::roboter($p3b, [['did' => 'did1', 'class' => 'a', 'nick' => 'Deebot 605 Wohnen'], ['did' => 'did2', 'class' => 'b', 'nick' => 'Deebot 605 Wohnen']])), ['deebot_605_wohnen', 'deebot_605_wohnen_2']);
 check('Konfiguration: Befehlsstufen einzeln, Rest gesperrt', [$p3['geraete']['did1']['befehle'], $p3['geraete']['did2']['befehle']], [['steuern' => true, 'einstellen' => false, 'finden' => false], ['steuern' => false, 'einstellen' => false, 'finden' => false]]);
 $gef = [['did' => 'did1', 'class' => 'dl8fht', 'resource' => 'ab', 'company' => 'eco-ng', 'nick' => 'Wohnen', 'modell' => 'M1'], ['did' => 'did2', 'class' => 'x', 'resource' => 'cd', 'nick' => 'Wohnen'], ['did' => 'did3', 'class' => 'y', 'nick' => ''], ['did' => '', 'class' => 'z']];
 $rb = EcoConfig::roboter($p3, $gef);

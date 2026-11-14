@@ -2,6 +2,11 @@
 
 Alle Änderungen an diesem Plugin. Schema: MAJOR.MINOR.PATCH.
 
+## [0.1.1] - 2026-11-13
+
+### Behoben
+- Speichern im Reiter „Geräte“ mit leerem Feld „Name im Topic“ setzte den Namen fest auf `roboter`, statt den Namen aus der Ecovacs-App zu behalten. Dadurch wechselten die Topics (`ecovacs/roboter/…` statt `ecovacs/<Name aus der App>/…`) und bereits angelegte Gateway-Abos und Miniserver-Eingänge blieben ohne Werte. Ein leeres Feld bleibt jetzt leer, es gilt der Name aus der App. **Wer den Namen schon auf `roboter` gespeichert hat:** im Reiter „Geräte“ das Feld leeren (oder den gewünschten Namen eintragen) und speichern.
+
 ## [0.1.0] - 2026-11-13
 
 Erste Version (Beta). Ersetzt den ioBroker-Adapter ecovacs-deebot.

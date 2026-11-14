@@ -129,13 +129,15 @@ final class EcoConfig
                 if ($did === '' || !is_array($p)) {
                     continue;
                 }
+                // Leeres Feld bleibt leer: roboter() nimmt dann den Namen aus der Cloud (nicht fest "roboter" speichern, sonst aendern sich die Topics)
                 $name = Util::name((string)($p['name'] ?? ''));
-                $base = $name !== '' ? $name : 'roboter';
-                $name = $base;
-                for ($n = 2; isset($names[$name]); $n++) {
-                    $name = $base . '_' . $n;
+                if ($name !== '') {
+                    $base = $name;
+                    for ($n = 2; isset($names[$name]); $n++) {
+                        $name = $base . '_' . $n;
+                    }
+                    $names[$name] = true;
                 }
-                $names[$name] = true;
                 $new['geraete'][$did] = ['aktiv' => !empty($p['aktiv']), 'name' => $name, 'protokoll' => self::cleanProtokoll($p['protokoll'] ?? 'auto'),
                     'befehle' => self::cleanBefehle($p['befehle'] ?? [])];
             }
