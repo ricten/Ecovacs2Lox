@@ -5,7 +5,7 @@
 ^ Autor | Rico Tengler |
 ^ Logo | {{:plugins:ecovacs2lox:ecovacs2lox.png?64|Ecovacs2Lox}} |
 ^ Status | BETA |
-^ Version | 0.1.0 |
+^ Version | 0.1.1 |
 ^ Min. LB Version | 4.0.0.0 |
 ^ Release Download | https://github.com/ricten/Ecovacs2Lox/releases/latest/download/ecovacs2lox.zip |
 ^ Pre-Release Download | - |
@@ -152,4 +152,5 @@ Weitere Hinweise: [[https://github.com/ricten/Ecovacs2Lox/blob/main/docs/wiki/Fe
 ===== 8. Changelog =====
 
 ^ Version ^ Änderung ^
+| 0.1.1 | Fehler behoben: Speichern im Reiter „Geräte“ mit leerem Feld „Name im Topic“ setzte den Namen fest auf ''roboter'' und verschob damit die Topics. Ein leeres Feld bleibt leer, es gilt der Name aus der Ecovacs-App (wer ''roboter'' schon gespeichert hat: Feld leeren und speichern) |
 | 0.1.0 | Erste Version (Beta): Anmeldung bei der Ecovacs-Cloud mit E-Mail-Verifizierung, alle Roboter des Kontos, ältere Modelle (XML) am Deebot 605 geprüft (auch die Steuerbefehle), neuere Modelle (JSON) ungeprüft, Push und Abfrage, Befehle (ab Werk gesperrt, mit Quittung), Healthcheck, Autoupdate, Weboberfläche im LoxBerry Design System |

@@ -4,7 +4,7 @@ LoxBerry-Plugin für **Ecovacs-Deebot-Saugroboter**. Es meldet sich wie die Ecov
 
 Ersetzt den ioBroker-Adapter `ecovacs-deebot`. Spezifikation und Protokollbefunde: [SPEZIFIKATION.md](SPEZIFIKATION.md).
 
-**Version 0.1.0 (Beta).** Läuft mit PHP 7.4, 8.2, 8.3 und 8.4 (LoxBerry 4.0 oder neuer).
+**Version 0.1.1 (Beta).** Läuft mit PHP 7.4, 8.2, 8.3 und 8.4 (LoxBerry 4.0 oder neuer).
 
 ```
 Roboter  <->  Ecovacs-Cloud  <->  Ecovacs2Lox (LoxBerry)  ->  MQTT-Broker  ->  MQTT-Gateway  ->  Miniserver
@@ -18,7 +18,7 @@ Roboter  <->  Ecovacs-Cloud  <->  Ecovacs2Lox (LoxBerry)  ->  MQTT-Broker  ->  M
 | **Ältere Modelle** (Protokoll XML: Deebot 500/600/700/900 u. a.) | **am Deebot 605 geprüft**: Abfragen, Antworten, Push-Meldungen, alle Werte |
 | Steuerbefehle für ältere Modelle | **am Deebot 605 geprüft** (2026-11-13): `finden`, `start`, `pause`, `weiter`, `stopp`, `laden`, `saugstufe`; `wasserstufe` nicht (der 605 hatte keinen Wassertank eingesetzt). Der 605 fährt nach `pause` nach wenigen Sekunden von selbst zur Station, `weiter` muss deshalb sofort danach kommen |
 | **Neuere Modelle** (Protokoll JSON: OZMO 920/950, T-, N-, X-Reihen) | nach der Protokollbeschreibung gebaut, **ungeprüft** (kein Testgerät). Rückmeldungen sind willkommen |
-| Tests | 268 automatische Prüfungen gegen eine Fake-Cloud, unter PHP 7.4, 8.2, 8.3 und 8.4 |
+| Tests | 270 automatische Prüfungen gegen eine Fake-Cloud, unter PHP 7.4, 8.2, 8.3 und 8.4 |
 
 Es gibt **keine lokale Schnittstelle** der Roboter: Plugin und Roboter reden nur über die Ecovacs-Cloud. Ohne Internet geht nichts. Es ist eine **inoffizielle** Schnittstelle (die der Ecovacs-App); Ecovacs kann sie ändern oder sperren. Das Plugin ist nicht von Ecovacs.
 

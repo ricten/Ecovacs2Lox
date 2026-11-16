@@ -22,7 +22,7 @@ ich habe ein LoxBerry-Plugin für **Ecovacs-Deebot-Saugroboter** geschrieben, al
 - Push-Meldungen der Roboter plus Abfragen per HTTPS; nur Änderungen werden veröffentlicht
 - Status als Klartext, Lebenszeichen (`ecovacs/status/ok|zaehler|ts`), Healthcheck, Autoupdate
 - Läuft mit PHP 7.4 bis 8.4 (LoxBerry 4.0 oder neuer), Weboberfläche im LoxBerry Design System
-- 268 automatische Tests gegen eine nachgebaute Cloud
+- 270 automatische Tests gegen eine nachgebaute Cloud
 
 **Nicht enthalten:** Karten, Räume und Zonen, Zeitpläne, Luftreiniger, Modelle mit XMPP.
 
